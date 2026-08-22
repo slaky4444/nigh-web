@@ -71,7 +71,13 @@ export default async function handler(req, res) {
         ? data.candidates[0].content.parts[0].text
         : "";
 
-    return res.status(200).json({ text: text || "" });
+    // TEMPORAL: si no hay texto, devolvemos también la respuesta cruda
+    // de Gemini para poder ver qué está fallando exactamente.
+    if (!text) {
+      return res.status(200).json({ text: "", debug: data, geminiStatus: geminiRes.status });
+    }
+
+    return res.status(200).json({ text: text });
   } catch (err) {
     return res.status(500).json({ error: "Error al llamar a Gemini", detail: String(err) });
   }
