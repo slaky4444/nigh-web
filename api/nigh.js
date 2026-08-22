@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
   try {
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,13 +71,7 @@ export default async function handler(req, res) {
         ? data.candidates[0].content.parts[0].text
         : "";
 
-    // TEMPORAL: si no hay texto, devolvemos también la respuesta cruda
-    // de Gemini para poder ver qué está fallando exactamente.
-    if (!text) {
-      return res.status(200).json({ text: "", debug: data, geminiStatus: geminiRes.status });
-    }
-
-    return res.status(200).json({ text: text });
+    return res.status(200).json({ text: text || "" });
   } catch (err) {
     return res.status(500).json({ error: "Error al llamar a Gemini", detail: String(err) });
   }
