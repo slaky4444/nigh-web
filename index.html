@@ -615,11 +615,7 @@ async function askNIGH(systemPrompt, userPrompt){
       body: JSON.stringify({ system: systemPrompt, message: userPrompt })
     });
     const data = await res.json();
-    if(data && data.text) return data.text.trim();
-    // TEMPORAL: si no hay texto, mostramos el motivo exacto para depurar.
-    if(data && data.debug) return "⚠️ DEBUG — Gemini respondió sin texto:\n" + JSON.stringify(data.debug, null, 2);
-    if(data && data.error) return "⚠️ DEBUG — Error del servidor:\n" + JSON.stringify(data, null, 2);
-    return null;
+    return (data && data.text) ? data.text.trim() : null;
   }catch(err){
     console.error("NIGH AI error:", err);
     return null;
