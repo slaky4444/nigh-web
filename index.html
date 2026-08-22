@@ -602,22 +602,20 @@ document.getElementById('modalOverlay').addEventListener('click', (e)=>{
 });
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
 
-/* ================= Claude API helper ================= */
+/* ================= NIGH AI helper =================
+   No hace falta tocar nada aquí: como la web y la función de IA
+   viven en el mismo sitio (Vercel), esto funciona solo. */
+const NIGH_API_ENDPOINT = "/api/nigh";
+
 async function askNIGH(systemPrompt, userPrompt){
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(NIGH_API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }]
-      })
+      body: JSON.stringify({ system: systemPrompt, message: userPrompt })
     });
     const data = await res.json();
-    const text = (data.content || []).map(b => b.text || "").join("\n").trim();
-    return text || null;
+    return (data && data.text) ? data.text.trim() : null;
   }catch(err){
     console.error("NIGH AI error:", err);
     return null;
