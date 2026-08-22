@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIGH — Internet, pero útil.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg: #08080D; --bg-elev: #0D0D14;
+    --surface: rgba(255,255,255,0.035); --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.09); --border-soft: rgba(255,255,255,0.05);
+    --text-1: #F3F2F7; --text-2: #A7A5B4; --text-3: #6F6D7C;
+    --violet-500: #8B5CF6; --violet-400: #A78BFA; --violet-300: #C4B5FD;
+    --violet-glow: rgba(139,92,246,0.35); --amber: #F5B84E;
+    --green: #5ACB82; --red: #F06060;
+    --radius-sm: 10px; --radius-md: 16px; --radius-lg: 24px;
+    --font-display: 'Outfit', sans-serif; --font-body: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+  }
+  html[data-theme="light"]{
+    --bg: #F5F3F9; --bg-elev: #FFFFFF;
+    --surface: rgba(20,15,35,0.035); --surface-hover: rgba(20,15,35,0.06);
+    --border: rgba(20,15,35,0.09); --border-soft: rgba(20,15,35,0.06);
+    --text-1: #17151F; --text-2: #57536A; --text-3: #918E9E;
+    --violet-glow: rgba(139,92,246,0.18);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--text-1); font-family:var(--font-body); -webkit-font-smoothing:antialiased; overflow-x:hidden; transition: background .4s ease, color .4s ease; }
+  ::selection{ background:var(--violet-500); color:white; }
+  .ambient{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .ambient::before{ content:''; position:absolute; top:-20%; left:50%; transform:translateX(-50%); width:1100px; height:1100px; background: radial-gradient(circle, var(--violet-glow) 0%, transparent 65%); filter:blur(10px); animation: drift 18s ease-in-out infinite alternate; }
+  .ambient::after{ content:''; position:absolute; bottom:-30%; right:-10%; width:800px; height:800px; background: radial-gradient(circle, rgba(167,139,250,0.14) 0%, transparent 70%); animation: drift 22s ease-in-out infinite alternate-reverse; }
+  @keyframes drift{ 0%{transform:translate(-50%,0) scale(1);} 100%{transform:translate(-46%,4%) scale(1.08);} }
+  .grain{ position:fixed; inset:0; z-index:-1; opacity:.025; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+
+  header{ position:sticky; top:0; z-index:50; backdrop-filter:blur(16px) saturate(140%); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom:1px solid var(--border-soft); }
+  .header-inner{ display:flex; align-items:center; justify-content:space-between; height:72px; }
+  .logo{ display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .logo-mark{ width:34px; height:34px; border-radius:9px; background: linear-gradient(155deg, var(--violet-400), #5B34C9); position:relative; flex-shrink:0; box-shadow: 0 4px 18px -4px var(--violet-glow); }
+  .logo-mark svg{ position:absolute; inset:0; margin:auto; }
+  .logo-word{ font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:0.5px; }
+  nav{ display:flex; gap:6px; }
+  nav a{ color:var(--text-2); text-decoration:none; font-size:14.5px; font-weight:500; padding:9px 15px; border-radius:100px; transition: all .2s ease; cursor:pointer; }
+  nav a:hover{ color:var(--text-1); background:var(--surface); }
+  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .lang-toggle{ display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:500; color:var(--text-2); background:var(--surface); border:1px solid var(--border); padding:7px 12px; border-radius:100px; cursor:pointer; transition: all .2s ease; user-select:none; }
+  .lang-toggle:hover{ color:var(--text-1); border-color:var(--violet-400); }
+  .lang-toggle b{ color:var(--violet-300); font-weight:700; }
+  .theme-toggle{ width:36px; height:36px; border-radius:100px; display:grid; place-items:center; background:var(--surface); border:1px solid var(--border); cursor:pointer; color:var(--text-2); transition: all .2s ease; }
+  .theme-toggle:hover{ color:var(--violet-300); border-color:var(--violet-400); }
+
+  .hero{ padding:108px 0 70px; text-align:center; position:relative; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12.5px; letter-spacing:0.4px; color:var(--violet-300); background:var(--surface); border:1px solid var(--border); padding:7px 16px; border-radius:100px; margin-bottom:28px; }
+  h1.hero-title{ font-family:var(--font-display); font-weight:800; font-size:clamp(44px,7vw,76px); line-height:1.03; letter-spacing:-2px; margin-bottom:22px; }
+  h1.hero-title .accent{ background: linear-gradient(100deg, var(--violet-300), var(--violet-500) 60%, #6D3FD4); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero-sub{ font-size:17.5px; color:var(--text-2); max-width:480px; margin:0 auto 40px; line-height:1.55; }
+
+  .search-shell{ max-width:640px; margin:0 auto 10px; position:relative; padding:2px; border-radius:20px; background: linear-gradient(120deg, rgba(139,92,246,0.5), rgba(255,255,255,0.06) 30%, rgba(139,92,246,0.35) 70%); background-size:200% 200%; animation: shimmer 6s ease infinite; }
+  @keyframes shimmer{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  .search-bar{ display:flex; align-items:center; gap:12px; background:var(--bg-elev); border-radius:18px; padding:18px 22px; }
+  .search-bar svg{ flex-shrink:0; color:var(--text-3); }
+  .search-bar input{ all:unset; flex:1; font-family:var(--font-body); font-size:16px; color:var(--text-1); }
+  .search-bar input::placeholder{ color:var(--text-3); }
+  .search-kbd{ font-family:var(--font-mono); font-size:12px; color:var(--text-3); border:1px solid var(--border); padding:3px 7px; border-radius:6px; cursor:pointer; }
+
+  .suggestions{ max-width:640px; margin:0 auto; text-align:left; display:none; }
+  .suggestions.show{ display:block; }
+  .sugg-item{ background:var(--surface); border:1px solid var(--border-soft); padding:11px 16px; border-radius:12px; margin-top:8px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; align-items:center; transition:all .15s ease; }
+  .sugg-item:hover{ border-color:var(--violet-400); background:var(--surface-hover); }
+  .sugg-item span.tag{ font-family:var(--font-mono); font-size:10.5px; color:var(--violet-300); }
+
+  .ai-inline-panel{ max-width:640px; margin:16px auto 0; background:var(--surface); border:1px solid var(--border-soft); border-radius:16px; padding:18px 20px; text-align:left; font-size:13.5px; line-height:1.65; display:none; white-space:pre-wrap; }
+  .ai-inline-panel.show{ display:block; }
+
+  .example-chips{ display:flex; flex-wrap:wrap; gap:9px; justify-content:center; max-width:640px; margin:20px auto 40px; }
+  .chip{ font-size:13px; color:var(--text-2); background:var(--surface); border:1px solid var(--border-soft); padding:8px 14px; border-radius:100px; cursor:pointer; transition:all .2s ease; }
+  .chip:hover{ color:var(--text-1); border-color:var(--violet-400); transform:translateY(-1px); }
+  .quick-actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+  .quick-btn{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:500; color:var(--text-2); background:var(--surface); border:1px solid var(--border); padding:9px 16px; border-radius:12px; cursor:pointer; transition:all .2s ease; }
+  .quick-btn:hover{ color:var(--text-1); border-color:var(--violet-400); transform:translateY(-2px); box-shadow: 0 8px 22px -10px var(--violet-glow); }
+
+  section{ padding:88px 0; position:relative; }
+  .section-head{ margin-bottom:46px; }
+  .section-tag{ font-family:var(--font-mono); font-size:12px; color:var(--violet-300); letter-spacing:0.6px; margin-bottom:12px; display:block; }
+  .section-title{ font-family:var(--font-display); font-weight:700; font-size:clamp(28px,4vw,38px); letter-spacing:-0.8px; margin-bottom:12px; }
+  .section-desc{ color:var(--text-2); font-size:15.5px; max-width:460px; }
+
+  .tools-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .tool-card{ background:var(--surface); border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:24px; cursor:pointer; transition:all .25s ease; }
+  .tool-card:hover{ background:var(--surface-hover); border-color:var(--violet-400); transform:translateY(-3px); box-shadow: 0 14px 30px -14px rgba(0,0,0,0.4); }
+  .tool-icon{ width:42px; height:42px; border-radius:11px; background:rgba(139,92,246,0.12); display:grid; place-items:center; font-size:19px; margin-bottom:16px; color:var(--violet-300); }
+  .tool-name{ font-family:var(--font-display); font-weight:600; font-size:16.5px; margin-bottom:6px; }
+  .tool-desc{ font-size:13.5px; color:var(--text-2); line-height:1.5; margin-bottom:16px; }
+  .tool-link{ font-size:13px; font-weight:600; color:var(--violet-300); display:flex; align-items:center; gap:5px; }
+
+  .resolver-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .resolver-card{ background: linear-gradient(160deg, var(--surface), transparent); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:30px 22px; transition:all .25s ease; cursor:pointer; }
+  .resolver-card:hover{ border-color:var(--violet-400); transform:translateY(-4px); }
+  .resolver-emoji{ font-size:26px; margin-bottom:20px; }
+  .resolver-title{ font-family:var(--font-display); font-weight:700; font-size:18px; margin-bottom:10px; }
+  .resolver-desc{ font-size:13.5px; color:var(--text-2); line-height:1.55; }
+
+  .study-panel{ display:grid; grid-template-columns:1.1fr 1fr; gap:28px; align-items:stretch; background:var(--surface); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:36px; }
+  .study-input{ width:100%; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; min-height:160px; color:var(--text-1); font-size:14px; line-height:1.6; font-family:var(--font-mono); resize:vertical; }
+  .study-input::placeholder{ color:var(--text-3); }
+  .study-btn{ margin-top:16px; display:inline-flex; align-items:center; gap:8px; background: linear-gradient(120deg, var(--violet-500), #6D3FD4); color:white; font-weight:600; font-size:14px; border:none; padding:13px 24px; border-radius:12px; cursor:pointer; box-shadow: 0 10px 26px -10px var(--violet-glow); }
+  .study-btn:disabled{ opacity:.6; cursor:default; }
+  .study-preview{ display:flex; flex-direction:column; gap:10px; justify-content:flex-start; overflow-y:auto; max-height:340px; }
+  .quiz-card{ background:var(--bg-elev); border:1px solid var(--border); border-radius:12px; padding:16px 18px; font-size:13.5px; cursor:pointer; }
+  .qlabel{ font-family:var(--font-mono); font-size:10.5px; color:var(--violet-300); margin-bottom:6px; display:block; }
+  .quiz-a{ display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-soft); color:var(--text-2); }
+  .quiz-card.revealed .quiz-a{ display:block; }
+  .quiz-hint{ font-size:10.5px; color:var(--text-3); margin-top:6px; }
+  .placeholder-note{ color:var(--text-3); font-size:13px; text-align:center; padding:30px 10px; }
+
+  .shield-panel{ background: linear-gradient(150deg, rgba(139,92,246,0.08), var(--surface) 60%); border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px; display:grid; grid-template-columns:1fr 1fr; gap:34px; align-items:center; }
+  .shield-title{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:24px; margin-bottom:12px; }
+  .shield-desc{ color:var(--text-2); font-size:14.5px; line-height:1.6; margin-bottom:22px; max-width:380px; }
+  .shield-disclaimer{ font-size:12px; color:var(--text-3); }
+  .shield-input{ width:100%; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; color:var(--text-1); font-family:var(--font-mono); font-size:13.5px; min-height:78px; resize:vertical; }
+  .shield-input::placeholder{ color:var(--text-3); }
+  .shield-analyze{ margin-top:14px; width:100%; background:var(--surface-hover); border:1px solid var(--border); color:var(--text-1); font-weight:600; font-size:14px; padding:12px; border-radius:12px; cursor:pointer; }
+  .shield-analyze:disabled{ opacity:.6; cursor:default; }
+  .shield-result{ margin-top:14px; }
+  .badge-level{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:100px; font-size:13px; font-weight:600; margin-bottom:8px; }
+  .badge-bajo{ background:rgba(90,203,130,.12); color:var(--green); border:1px solid rgba(90,203,130,.3); }
+  .badge-medio{ background:rgba(245,184,78,.12); color:var(--amber); border:1px solid rgba(245,184,78,.3); }
+  .badge-alto{ background:rgba(240,96,96,.12); color:var(--red); border:1px solid rgba(240,96,96,.3); }
+  .shield-signals{ font-size:12.5px; color:var(--text-2); line-height:1.6; }
+
+  .community{ text-align:center; border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:64px 40px; background:var(--surface); }
+  .community-title{ font-family:var(--font-display); font-weight:700; font-size:30px; margin-bottom:12px; letter-spacing:-0.6px; }
+  .community-desc{ color:var(--text-2); font-size:15px; margin-bottom:26px; }
+  .btn-primary{ background: linear-gradient(120deg, var(--violet-500), #6D3FD4); color:white; font-weight:600; font-size:14.5px; border:none; padding:14px 28px; border-radius:12px; cursor:pointer; box-shadow: 0 12px 28px -12px var(--violet-glow); }
+
+  .kofi-strip{ display:flex; justify-content:center; padding:50px 0 10px; }
+  .kofi-btn{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-2); background:var(--surface); border:1px solid var(--border-soft); padding:10px 18px; border-radius:100px; text-decoration:none; transition:all .2s ease; }
+  .kofi-btn:hover{ color:var(--text-1); border-color:var(--border); }
+
+  footer{ border-top:1px solid var(--border-soft); padding:56px 0 34px; margin-top:30px; }
+  .footer-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; flex-wrap:wrap; gap:24px; }
+  .footer-brand .logo-word{ display:block; margin-bottom:8px; }
+  .footer-tag{ color:var(--text-2); font-size:13.5px; }
+  .footer-links{ display:flex; gap:26px; flex-wrap:wrap; }
+  .footer-links a{ color:var(--text-2); text-decoration:none; font-size:13.5px; transition:color .2s ease; cursor:pointer; }
+  .footer-links a:hover{ color:var(--text-1); }
+  .footer-bottom{ color:var(--text-3); font-size:12.5px; border-top:1px solid var(--border-soft); padding-top:22px; }
+
+  /* Modal */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:200; opacity:0; pointer-events:none; transition:opacity .25s ease; padding:20px; }
+  .modal-overlay.open{ opacity:1; pointer-events:auto; }
+  .modal{ background:var(--bg-elev); border:1px solid var(--border); border-radius:20px; max-width:520px; width:100%; max-height:86vh; overflow-y:auto; padding:28px; transform:translateY(14px) scale(.98); transition:transform .25s ease; }
+  .modal-overlay.open .modal{ transform:translateY(0) scale(1); }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .modal-head h3{ font-family:var(--font-display); font-weight:700; font-size:19px; }
+  .modal-close{ background:var(--surface); border:1px solid var(--border); width:30px; height:30px; border-radius:100px; color:var(--text-2); cursor:pointer; flex-shrink:0; }
+  .modal-close:hover{ color:var(--text-1); }
+
+  .field-label{ font-size:12.5px; color:var(--text-2); margin-bottom:6px; display:block; font-weight:500; }
+  .field-input, .field-textarea{ width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 13px; color:var(--text-1); font-family:var(--font-body); font-size:14px; }
+  .field-input::placeholder, .field-textarea::placeholder{ color:var(--text-3); }
+  .field-textarea{ min-height:90px; resize:vertical; font-family:var(--font-mono); font-size:13px; }
+  .field-row{ display:flex; gap:10px; margin-bottom:14px; }
+  .field-row > div{ flex:1; }
+  .field-block{ margin-bottom:14px; }
+  .btn-modal{ width:100%; background: linear-gradient(120deg, var(--violet-500), #6D3FD4); color:white; border:none; font-weight:600; font-size:14px; padding:12px; border-radius:11px; cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-modal:disabled{ opacity:.6; cursor:default; }
+  .btn-secondary{ width:100%; background:var(--surface-hover); border:1px solid var(--border); color:var(--text-1); font-weight:600; font-size:13.5px; padding:11px; border-radius:11px; cursor:pointer; margin-top:8px; }
+  .result-box{ margin-top:16px; background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:16px; font-size:13.5px; line-height:1.6; color:var(--text-1); white-space:pre-wrap; }
+
+  .calc-display{ background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:right; font-family:var(--font-mono); font-size:30px; margin-bottom:14px; overflow-x:auto; word-break:break-all; }
+  .calc-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .calc-btn{ background:var(--surface); border:1px solid var(--border-soft); color:var(--text-1); font-size:17px; font-weight:500; padding:16px 0; border-radius:10px; cursor:pointer; font-family:var(--font-display); }
+  .calc-btn:hover{ background:var(--surface-hover); }
+  .calc-btn.op{ background:rgba(139,92,246,0.15); color:var(--violet-300); }
+  .calc-btn.eq{ background: linear-gradient(120deg, var(--violet-500), #6D3FD4); color:white; grid-column:span 2; }
+  .calc-btn.wide{ grid-column:span 2; }
+
+  .slider-row{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .slider-row input[type=range]{ flex:1; accent-color: var(--violet-500); }
+  .slider-val{ font-family:var(--font-mono); font-size:13px; color:var(--violet-300); width:28px; text-align:right; }
+  .check-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .check-chip{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-2); background:var(--surface); border:1px solid var(--border-soft); padding:7px 12px; border-radius:100px; cursor:pointer; user-select:none; }
+  .check-chip input{ accent-color:var(--violet-500); }
+  .strength-bar{ height:6px; border-radius:100px; background:var(--border-soft); margin-top:12px; overflow:hidden; }
+  .strength-fill{ height:100%; border-radius:100px; transition:all .3s ease; width:0%; }
+  .pass-output{ display:flex; gap:8px; align-items:center; }
+  .pass-output .field-input{ font-family:var(--font-mono); }
+  .copy-btn{ background:var(--surface-hover); border:1px solid var(--border); color:var(--text-1); width:42px; height:42px; border-radius:10px; cursor:pointer; flex-shrink:0; font-size:15px; }
+  .qr-render{ display:flex; justify-content:center; padding:18px 0; }
+  .spinner{ width:15px; height:15px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; display:inline-block; animation:spin .7s linear infinite; }
+  .spinner.dark{ border:2px solid rgba(139,92,246,.25); border-top-color:var(--violet-400); }
+
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  @media (max-width:860px){
+    nav{ display:none; }
+    .tools-grid{ grid-template-columns:repeat(2,1fr); }
+    .resolver-grid{ grid-template-columns:repeat(2,1fr); }
+    .study-panel, .shield-panel{ grid-template-columns:1fr; }
+    .wrap{ padding:0 20px; }
+  }
+  @media (max-width:520px){
+    .tools-grid, .resolver-grid{ grid-template-columns:1fr; }
+    .hero{ padding:76px 0 50px; }
+    .field-row{ flex-direction:column; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15V3L15 15V3" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="logo-word">NIGH</span>
+    </div>
+    <nav>
+      <a onclick="scrollToId('top')" data-i18n="nav_inicio">Inicio</a>
+      <a onclick="scrollToId('herramientas')" data-i18n="nav_herramientas">Herramientas</a>
+      <a onclick="scrollToId('resolver')" data-i18n="nav_resolver">Resolver</a>
+      <a onclick="scrollToId('estudiar')" data-i18n="nav_estudiar">Estudiar</a>
+      <a onclick="scrollToId('seguridad')" data-i18n="nav_seguridad">Seguridad</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-toggle" id="langToggle" onclick="toggleLang()"></div>
+      <div class="theme-toggle" id="themeToggle" title="Cambiar tema">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <div class="wrap">
+      <span class="eyebrow" data-i18n="hero_eyebrow">✦ Internet, pero útil.</span>
+      <h1 class="hero-title"><span data-i18n="hero_title_pre">¿Qué</span> <span class="accent" data-i18n="hero_title_accent">necesitas</span><span data-i18n="hero_title_q">?</span></h1>
+      <p class="hero-sub" data-i18n="hero_sub">Una colección de herramientas rápidas para resolver cosas de la vida real.</p>
+
+      <div class="search-shell">
+        <div class="search-bar">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" data-i18n-ph="search_placeholder" placeholder="Busca una herramienta o escribe un problema...">
+          <span class="search-kbd" id="searchGoBtn">↵</span>
+        </div>
+      </div>
+
+      <div class="suggestions" id="suggestions"></div>
+      <div class="ai-inline-panel" id="aiInlinePanel"></div>
+
+      <div class="example-chips" id="exampleChips"></div>
+
+      <div class="quick-actions">
+        <div class="quick-btn" onclick="openCalculator()">🧮 <span data-i18n="tool_calc_name">Calculadora</span></div>
+        <div class="quick-btn" onclick="openPercent()">％ <span data-i18n="tool_percent_name">Porcentajes</span></div>
+        <div class="quick-btn" onclick="openQR()">▣ <span data-i18n="tool_qr_name">Generador QR</span></div>
+        <div class="quick-btn" onclick="openTextCounter()">Aa <span data-i18n="tool_textcount_name">Contador de texto</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="herramientas">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag" data-i18n="tools_tag">01 — CAJA DE HERRAMIENTAS</span>
+        <h2 class="section-title" data-i18n="tools_title">Herramientas</h2>
+        <p class="section-desc" data-i18n="tools_desc">Utilidades rápidas, sin registros ni distracciones.</p>
+      </div>
+      <div class="tools-grid">
+        <div class="tool-card" onclick="openCalculator()">
+          <div class="tool-icon">🧮</div>
+          <div class="tool-name" data-i18n="tool_calc_name">Calculadora</div>
+          <div class="tool-desc" data-i18n="tool_calc_desc">Operaciones rápidas, sin abrir otra app.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+        <div class="tool-card" onclick="openPercent()">
+          <div class="tool-icon">％</div>
+          <div class="tool-name" data-i18n="tool_percent_name">Porcentajes</div>
+          <div class="tool-desc" data-i18n="tool_percent_desc">Descuentos, propinas y subidas al instante.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+        <div class="tool-card" onclick="openQR()">
+          <div class="tool-icon">▣</div>
+          <div class="tool-name" data-i18n="tool_qr_name">Generador QR</div>
+          <div class="tool-desc" data-i18n="tool_qr_desc">Convierte cualquier enlace en un código QR.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+        <div class="tool-card" onclick="openTextCounter()">
+          <div class="tool-icon">Aa</div>
+          <div class="tool-name" data-i18n="tool_textcount_name">Contador de texto</div>
+          <div class="tool-desc" data-i18n="tool_textcount_desc">Caracteres, palabras y tiempo de lectura.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+        <div class="tool-card" onclick="openPasswordGen()">
+          <div class="tool-icon">⌁</div>
+          <div class="tool-name" data-i18n="tool_pass_name">Generador de contraseñas</div>
+          <div class="tool-desc" data-i18n="tool_pass_desc">Contraseñas seguras a tu medida.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+        <div class="tool-card" onclick="openDateDiff()">
+          <div class="tool-icon">◷</div>
+          <div class="tool-name" data-i18n="tool_date_name">Diferencia de fechas</div>
+          <div class="tool-desc" data-i18n="tool_date_desc">Cuántos días hay entre dos fechas.</div>
+          <div class="tool-link" data-i18n="tool_open">Abrir →</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="resolver">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag" data-i18n="resolver_tag">02 — PROBLEMAS REALES</span>
+        <h2 class="section-title" data-i18n="resolver_title">Resolver</h2>
+        <p class="section-desc" data-i18n="resolver_desc">Cuando no sabes ni por dónde empezar.</p>
+      </div>
+      <div class="resolver-grid">
+        <div class="resolver-card" onclick="openResolver('identificar')">
+          <div class="resolver-emoji">🔎</div>
+          <div class="resolver-title" data-i18n="resolver1_title">¿Qué es esto?</div>
+          <div class="resolver-desc" data-i18n="resolver1_desc">Describe un objeto y descubre qué es y qué puedes hacer con él.</div>
+        </div>
+        <div class="resolver-card" onclick="openResolver('arreglo')">
+          <div class="resolver-emoji">🛠️</div>
+          <div class="resolver-title" data-i18n="resolver2_title">¿Cómo lo arreglo?</div>
+          <div class="resolver-desc" data-i18n="resolver2_desc">Diagnóstico guiado para problemas cotidianos.</div>
+        </div>
+        <div class="resolver-card" onclick="openResolver('valor')">
+          <div class="resolver-emoji">💰</div>
+          <div class="resolver-title" data-i18n="resolver3_title">¿Cuánto vale?</div>
+          <div class="resolver-desc" data-i18n="resolver3_desc">Obtén una orientación para valorar un objeto.</div>
+        </div>
+        <div class="resolver-card" onclick="openResolver('tirar')">
+          <div class="resolver-emoji">♻️</div>
+          <div class="resolver-title" data-i18n="resolver4_title">¿Dónde lo tiro?</div>
+          <div class="resolver-desc" data-i18n="resolver4_desc">Descubre cómo gestionar correctamente un residuo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="estudiar">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag" data-i18n="study_tag">03 — APRENDER</span>
+        <h2 class="section-title" data-i18n="study_title">Estudia de otra manera.</h2>
+        <p class="section-desc" data-i18n="study_desc">Convierte tus apuntes en preguntas y practica.</p>
+      </div>
+      <div class="study-panel">
+        <div>
+          <textarea class="study-input" id="studyNotes" data-i18n-ph="study_placeholder" placeholder="Pega tus apuntes aquí..."></textarea>
+          <button class="study-btn" id="studyBtn" onclick="createReview()">✦ <span data-i18n="study_button">Crear repaso</span></button>
+        </div>
+        <div class="study-preview" id="studyPreview">
+          <div class="placeholder-note" data-i18n="study_empty">Tus preguntas aparecerán aquí.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="seguridad">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-tag" data-i18n="shield_tag">04 — SEGURIDAD</span>
+        <h2 class="section-title">NIGH Shield</h2>
+        <p class="section-desc" data-i18n="shield_head_desc">Una segunda opinión antes de hacer clic.</p>
+      </div>
+      <div class="shield-panel">
+        <div>
+          <div class="shield-title">🛡️ NIGH Shield</div>
+          <p class="shield-desc" data-i18n="shield_desc">Busca señales básicas de riesgo en mensajes, anuncios y enlaces.</p>
+          <p class="shield-disclaimer" data-i18n="shield_disclaimer">No garantiza que algo sea una estafa: es una orientación, no una certeza.</p>
+        </div>
+        <div>
+          <textarea class="shield-input" id="shieldInput" data-i18n-ph="shield_placeholder" placeholder="Pega aquí un SMS, email, anuncio o URL..."></textarea>
+          <button class="shield-analyze" id="shieldBtn" onclick="analyzeShield()"><span data-i18n="shield_button">Analizar</span></button>
+          <div class="shield-result" id="shieldResult"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="community">
+        <div class="community-title" data-i18n="community_title">¿Qué herramienta falta?</div>
+        <p class="community-desc" data-i18n="community_desc">NIGH crecerá según lo que la gente realmente necesite.</p>
+        <button class="btn-primary" onclick="openIdeaBox()" data-i18n="community_button">Proponer una idea</button>
+      </div>
+    </div>
+    <div class="wrap kofi-strip">
+      <a href="https://ko-fi.com/coldetz" target="_blank" class="kofi-btn">☕ <span data-i18n="kofi_label">Apoya NIGH</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="logo-word">NIGH</span>
+        <div class="footer-tag" data-i18n="hero_sub_short">Internet, pero útil.</div>
+      </div>
+      <div class="footer-links">
+        <a onclick="scrollToId('top')" data-i18n="nav_inicio">Inicio</a>
+        <a onclick="scrollToId('herramientas')" data-i18n="nav_herramientas">Herramientas</a>
+        <a onclick="scrollToId('resolver')" data-i18n="nav_resolver">Resolver</a>
+        <a onclick="scrollToId('estudiar')" data-i18n="nav_estudiar">Estudiar</a>
+        <a onclick="scrollToId('seguridad')" data-i18n="nav_seguridad">Seguridad</a>
+        <a data-i18n="footer_privacy">Privacidad</a>
+        <a href="mailto:coldeatz@gmail.com">✉ <span data-i18n="footer_contact">Contacto</span></a>
+        <a href="https://ko-fi.com/coldetz" target="_blank">☕ <span data-i18n="kofi_label">Apoya NIGH</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 NIGH · <a href="mailto:coldeatz@gmail.com" style="color:inherit;">coldeatz@gmail.com</a></div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle"></h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ================= i18n ================= */
+const I18N = {
+  es: {
+    nav_inicio:"Inicio", nav_herramientas:"Herramientas", nav_resolver:"Resolver", nav_estudiar:"Estudiar", nav_seguridad:"Seguridad",
+    hero_eyebrow:"✦ Internet, pero útil.", hero_title_pre:"¿Qué", hero_title_accent:"necesitas", hero_title_q:"?",
+    hero_sub:"Una colección de herramientas rápidas para resolver cosas de la vida real.",
+    hero_sub_short:"Internet, pero útil.",
+    search_placeholder:"Busca una herramienta o escribe un problema...",
+    chip1:"¿Cuánto vale mi PS4?", chip2:"Mi ordenador no enciende", chip3:"¿Dónde tiro una bombilla?", chip4:"Explícame la fotosíntesis",
+    tools_tag:"01 — CAJA DE HERRAMIENTAS", tools_title:"Herramientas", tools_desc:"Utilidades rápidas, sin registros ni distracciones.",
+    tool_calc_name:"Calculadora", tool_calc_desc:"Operaciones rápidas, sin abrir otra app.",
+    tool_percent_name:"Porcentajes", tool_percent_desc:"Descuentos, propinas y subidas al instante.",
+    tool_qr_name:"Generador QR", tool_qr_desc:"Convierte cualquier enlace en un código QR.",
+    tool_textcount_name:"Contador de texto", tool_textcount_desc:"Caracteres, palabras y tiempo de lectura.",
+    tool_pass_name:"Generador de contraseñas", tool_pass_desc:"Contraseñas seguras a tu medida.",
+    tool_date_name:"Diferencia de fechas", tool_date_desc:"Cuántos días hay entre dos fechas.",
+    tool_open:"Abrir →",
+    resolver_tag:"02 — PROBLEMAS REALES", resolver_title:"Resolver", resolver_desc:"Cuando no sabes ni por dónde empezar.",
+    resolver1_title:"¿Qué es esto?", resolver1_desc:"Describe un objeto y descubre qué es y qué puedes hacer con él.",
+    resolver2_title:"¿Cómo lo arreglo?", resolver2_desc:"Diagnóstico guiado para problemas cotidianos.",
+    resolver3_title:"¿Cuánto vale?", resolver3_desc:"Obtén una orientación para valorar un objeto.",
+    resolver4_title:"¿Dónde lo tiro?", resolver4_desc:"Descubre cómo gestionar correctamente un residuo.",
+    resolver1_placeholder:"Describe el objeto: forma, material, marcas, para qué crees que sirve...",
+    resolver2_placeholder:"Describe el problema: qué aparato es, qué hace (o no hace), desde cuándo...",
+    resolver3_placeholder:"Describe el objeto: qué es, marca, modelo, estado, antigüedad...",
+    resolver4_placeholder:"Describe el residuo: de qué material es, tamaño, si lleva pilas o líquidos...",
+    resolver_ask:"Preguntar a NIGH", resolver_thinking:"Pensando...",
+    study_tag:"03 — APRENDER", study_title:"Estudia de otra manera.", study_desc:"Convierte tus apuntes en preguntas y practica.",
+    study_placeholder:"Pega tus apuntes aquí...", study_button:"Crear repaso", study_creating:"Creando...",
+    study_empty:"Tus preguntas aparecerán aquí.", study_need_notes:"Pega algo de texto antes de crear el repaso.",
+    quiz_tap_hint:"Toca para ver la respuesta",
+    shield_tag:"04 — SEGURIDAD", shield_head_desc:"Una segunda opinión antes de hacer clic.",
+    shield_desc:"Busca señales básicas de riesgo en mensajes, anuncios y enlaces.",
+    shield_disclaimer:"No garantiza que algo sea una estafa: es una orientación, no una certeza.",
+    shield_placeholder:"Pega aquí un SMS, email, anuncio o URL...",
+    shield_button:"Analizar", shield_analyzing:"Analizando...", shield_need_text:"Pega un texto o enlace primero.",
+    shield_level_bajo:"Riesgo bajo", shield_level_medio:"Revisa esto", shield_level_alto:"Riesgo alto",
+    community_title:"¿Qué herramienta falta?", community_desc:"NIGH crecerá según lo que la gente realmente necesite.",
+    community_button:"Proponer una idea", footer_privacy:"Privacidad", footer_contact:"Contacto", kofi_label:"Apoya NIGH",
+    idea_title:"Proponer una idea", idea_placeholder:"¿Qué herramienta te gustaría que NIGH tuviera?",
+    idea_send:"Enviar idea", idea_sent:"¡Gracias! Idea guardada localmente para el equipo de NIGH.",
+    modal_calc:"Calculadora", modal_percent:"Porcentajes", modal_qr:"Generador QR", modal_textcount:"Contador de texto",
+    modal_pass:"Generador de contraseñas", modal_date:"Diferencia de fechas",
+    percent_of_label:"¿Cuánto es X% de Y?", percent_of_x:"Porcentaje (%)", percent_of_y:"Cantidad", percent_of_result:"es",
+    percent_isof_label:"X es qué % de Y", percent_isof_x:"Valor X", percent_isof_y:"Valor Y", percent_isof_result:"representa",
+    percent_change_label:"Aumentar / disminuir Y en X%", percent_change_x:"Cambio (%, negativo para bajar)", percent_change_y:"Cantidad inicial",
+    calculate:"Calcular",
+    qr_input_ph:"Pega un enlace o texto...", qr_generate:"Generar QR", qr_download:"Descargar PNG",
+    count_ph:"Escribe o pega tu texto aquí...", count_chars:"Caracteres", count_words:"Palabras", count_sentences:"Frases", count_reading:"Lectura",
+    pass_length:"Longitud", pass_upper:"Mayúsculas", pass_lower:"Minúsculas", pass_numbers:"Números", pass_symbols:"Símbolos",
+    pass_generate:"Generar contraseña", pass_copy:"Copiar", pass_copied:"¡Copiada!",
+    pass_weak:"Débil", pass_medium:"Media", pass_strong:"Fuerte",
+    date_from:"Desde", date_to:"Hasta", date_calc:"Calcular diferencia",
+    date_result_days:"días", date_result_detail:"Aproximadamente"
+  },
+  en: {
+    nav_inicio:"Home", nav_herramientas:"Tools", nav_resolver:"Solve", nav_estudiar:"Study", nav_seguridad:"Security",
+    hero_eyebrow:"✦ The internet, but useful.", hero_title_pre:"What do", hero_title_accent:"you need", hero_title_q:"?",
+    hero_sub:"A collection of quick tools to solve real everyday problems.",
+    hero_sub_short:"The internet, but useful.",
+    search_placeholder:"Search for a tool or describe a problem...",
+    chip1:"How much is my PS4 worth?", chip2:"My computer won't turn on", chip3:"Where do I dispose of a light bulb?", chip4:"Explain photosynthesis to me",
+    tools_tag:"01 — TOOLBOX", tools_title:"Tools", tools_desc:"Quick utilities, no sign-ups, no distractions.",
+    tool_calc_name:"Calculator", tool_calc_desc:"Quick operations, no need to open another app.",
+    tool_percent_name:"Percentages", tool_percent_desc:"Discounts, tips and increases, instantly.",
+    tool_qr_name:"QR generator", tool_qr_desc:"Turn any link into a QR code.",
+    tool_textcount_name:"Text counter", tool_textcount_desc:"Characters, words and reading time.",
+    tool_pass_name:"Password generator", tool_pass_desc:"Strong passwords, tailored to you.",
+    tool_date_name:"Date difference", tool_date_desc:"How many days between two dates.",
+    tool_open:"Open →",
+    resolver_tag:"02 — REAL PROBLEMS", resolver_title:"Solve", resolver_desc:"When you don't even know where to start.",
+    resolver1_title:"What is this?", resolver1_desc:"Describe an object and find out what it is and what you can do with it.",
+    resolver2_title:"How do I fix it?", resolver2_desc:"Guided diagnosis for everyday problems.",
+    resolver3_title:"How much is it worth?", resolver3_desc:"Get a rough valuation for an item.",
+    resolver4_title:"Where do I dispose of it?", resolver4_desc:"Find out how to properly dispose of waste.",
+    resolver1_placeholder:"Describe the object: shape, material, markings, what you think it's for...",
+    resolver2_placeholder:"Describe the problem: what device it is, what it does (or doesn't do), since when...",
+    resolver3_placeholder:"Describe the object: what it is, brand, model, condition, age...",
+    resolver4_placeholder:"Describe the waste: what material, size, batteries or liquids inside...",
+    resolver_ask:"Ask NIGH", resolver_thinking:"Thinking...",
+    study_tag:"03 — LEARN", study_title:"Study a different way.", study_desc:"Turn your notes into questions and practice.",
+    study_placeholder:"Paste your notes here...", study_button:"Create review", study_creating:"Creating...",
+    study_empty:"Your questions will appear here.", study_need_notes:"Paste some text before creating a review.",
+    quiz_tap_hint:"Tap to reveal the answer",
+    shield_tag:"04 — SECURITY", shield_head_desc:"A second opinion before you click.",
+    shield_desc:"Looks for basic risk signals in messages, ads and links.",
+    shield_disclaimer:"It can't guarantee something is a scam: it's guidance, not a certainty.",
+    shield_placeholder:"Paste an SMS, email, ad or URL here...",
+    shield_button:"Analyze", shield_analyzing:"Analyzing...", shield_need_text:"Paste some text or a link first.",
+    shield_level_bajo:"Low risk", shield_level_medio:"Worth reviewing", shield_level_alto:"High risk",
+    community_title:"What tool is missing?", community_desc:"NIGH will grow based on what people actually need.",
+    community_button:"Suggest an idea", footer_privacy:"Privacy", footer_contact:"Contact", kofi_label:"Support NIGH",
+    idea_title:"Suggest an idea", idea_placeholder:"What tool would you like NIGH to have?",
+    idea_send:"Send idea", idea_sent:"Thanks! Idea saved locally for the NIGH team.",
+    modal_calc:"Calculator", modal_percent:"Percentages", modal_qr:"QR generator", modal_textcount:"Text counter",
+    modal_pass:"Password generator", modal_date:"Date difference",
+    percent_of_label:"How much is X% of Y?", percent_of_x:"Percentage (%)", percent_of_y:"Amount", percent_of_result:"is",
+    percent_isof_label:"X is what % of Y", percent_isof_x:"Value X", percent_isof_y:"Value Y", percent_isof_result:"represents",
+    percent_change_label:"Increase / decrease Y by X%", percent_change_x:"Change (%, negative to decrease)", percent_change_y:"Starting amount",
+    calculate:"Calculate",
+    qr_input_ph:"Paste a link or text...", qr_generate:"Generate QR", qr_download:"Download PNG",
+    count_ph:"Type or paste your text here...", count_chars:"Characters", count_words:"Words", count_sentences:"Sentences", count_reading:"Reading",
+    pass_length:"Length", pass_upper:"Uppercase", pass_lower:"Lowercase", pass_numbers:"Numbers", pass_symbols:"Symbols",
+    pass_generate:"Generate password", pass_copy:"Copy", pass_copied:"Copied!",
+    pass_weak:"Weak", pass_medium:"Medium", pass_strong:"Strong",
+    date_from:"From", date_to:"To", date_calc:"Calculate difference",
+    date_result_days:"days", date_result_detail:"About"
+  }
+};
+let currentLang = 'es';
+
+function t(key){ return (I18N[currentLang] && I18N[currentLang][key]) || key; }
+
+function applyLang(){
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[currentLang][key] !== undefined) el.textContent = I18N[currentLang][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(I18N[currentLang][key] !== undefined) el.placeholder = I18N[currentLang][key];
+  });
+  document.getElementById('langToggle').innerHTML = currentLang === 'es'
+    ? '<b>🇪🇸 ES</b><span style="opacity:.4"> / </span>🇬🇧 EN'
+    : '🇪🇸 ES<span style="opacity:.4"> / </span><b>🇬🇧 EN</b>';
+  renderChips();
+}
+function toggleLang(){ currentLang = currentLang === 'es' ? 'en' : 'es'; applyLang(); }
+
+function renderChips(){
+  const wrap = document.getElementById('exampleChips');
+  const items = [t('chip1'), t('chip2'), t('chip3'), t('chip4')];
+  wrap.innerHTML = items.map(txt => `<span class="chip" onclick="chipClick('${txt.replace(/'/g,"\\'")}')">${txt}</span>`).join('');
+}
+function chipClick(text){
+  document.getElementById('searchInput').value = text;
+  runSearch(text);
+}
+
+/* ================= Theme ================= */
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  root.setAttribute('data-theme', isLight ? 'dark' : 'light');
+});
+
+function scrollToId(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth', block: id==='top' ? 'start' : 'start'});
+}
+
+/* ================= Modal ================= */
+function openModal(title, bodyHTML){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
+
+/* ================= Claude API helper ================= */
+async function askNIGH(systemPrompt, userPrompt){
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content || []).map(b => b.text || "").join("\n").trim();
+    return text || null;
+  }catch(err){
+    console.error("NIGH AI error:", err);
+    return null;
+  }
+}
+function cleanJSON(text){
+  if(!text) return null;
+  let t = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  try{ return JSON.parse(t); }catch(e){ return null; }
+}
+
+/* ================= Search / routing ================= */
+const TOOL_MATCHERS = [
+  { re:/calcul|suma|resta|multiplic|divid/i, action: openCalculatorRef, labelKey:'tool_calc_name', tagKey:'tools_tag' },
+  { re:/porcentaj|percent|%|descuento|propina|discount|tip/i, action: ()=>openPercent(), labelKey:'tool_percent_name', tagKey:'tools_tag' },
+  { re:/\bqr\b|código qr|qr code/i, action: ()=>openQR(), labelKey:'tool_qr_name', tagKey:'tools_tag' },
+  { re:/caracteres|palabras|contar texto|word count|character/i, action: ()=>openTextCounter(), labelKey:'tool_textcount_name', tagKey:'tools_tag' },
+  { re:/contraseñ|password/i, action: ()=>openPasswordGen(), labelKey:'tool_pass_name', tagKey:'tools_tag' },
+  { re:/diferencia de fecha|entre fechas|date difference|days between/i, action: ()=>openDateDiff(), labelKey:'tool_date_name', tagKey:'tools_tag' },
+  { re:/vale|precio|cuesta|worth|price/i, action: ()=>openResolver('valor'), labelKey:'resolver3_title', tagKey:'resolver_tag' },
+  { re:/no enciende|no funciona|roto|averiad|arregl|fix|broken|won.t turn on/i, action: ()=>openResolver('arreglo'), labelKey:'resolver2_title', tagKey:'resolver_tag' },
+  { re:/tiro|reciclar|residuo|dispose|throw away|recycle/i, action: ()=>openResolver('tirar'), labelKey:'resolver4_title', tagKey:'resolver_tag' },
+  { re:/qué es esto|que es esto|what is this|identificar/i, action: ()=>openResolver('identificar'), labelKey:'resolver1_title', tagKey:'resolver_tag' },
+];
+function openCalculatorRef(){ openCalculator(); }
+
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim();
+  const sugBox = document.getElementById('suggestions');
+  document.getElementById('aiInlinePanel').classList.remove('show');
+  if(q.length < 2){ sugBox.classList.remove('show'); sugBox.innerHTML=''; return; }
+  const matches = TOOL_MATCHERS.filter(m => m.re.test(q));
+  if(matches.length){
+    sugBox.innerHTML = matches.slice(0,4).map(m => `<div class="sugg-item" onclick='window.__nighAction${TOOL_MATCHERS.indexOf(m)}()'><span>${t(m.labelKey)}</span><span class="tag">${t(m.tagKey)}</span></div>`).join('');
+    TOOL_MATCHERS.forEach((m,i)=>{ window['__nighAction'+i] = m.action; });
+    sugBox.classList.add('show');
+  } else {
+    sugBox.classList.remove('show'); sugBox.innerHTML='';
+  }
+});
+searchInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') runSearch(searchInput.value.trim()); });
+document.getElementById('searchGoBtn').addEventListener('click', ()=> runSearch(searchInput.value.trim()));
+
+function runSearch(q){
+  if(!q) return;
+  document.getElementById('suggestions').classList.remove('show');
+  const match = TOOL_MATCHERS.find(m => m.re.test(q));
+  if(match){ match.action(); return; }
+  openGeneralAssistant(q);
+}
+
+async function openGeneralAssistant(q){
+  const panel = document.getElementById('aiInlinePanel');
+  panel.classList.add('show');
+  panel.innerHTML = `<span class="spinner dark"></span> ${t('resolver_thinking')}`;
+  const sys = `Eres el asistente de NIGH, una plataforma web que reúne herramientas prácticas para problemas cotidianos (lema: "Internet, pero útil"). Responde de forma breve, clara y directa (máximo 5-6 frases) a la consulta del usuario, en ${currentLang === 'es' ? 'español' : 'inglés'}. Si la consulta encaja con una utilidad concreta (calculadora, porcentajes, código QR, contraseñas, contar texto, fechas) o con identificar un objeto, valorar un objeto, arreglar algo o reciclar algo, menciónalo brevemente al final como sugerencia. No uses markdown.`;
+  const answer = await askNIGH(sys, q);
+  panel.innerHTML = answer ? answer : (currentLang === 'es' ? 'No se pudo contactar con NIGH ahora mismo. Inténtalo de nuevo en unos segundos.' : "Couldn't reach NIGH right now. Please try again in a moment.");
+}
+
+/* ================= Calculadora ================= */
+function openCalculator(){
+  openModal(t('modal_calc'), `
+    <div class="calc-display" id="calcDisplay">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn op" onclick="calcClear()">C</button>
+      <button class="calc-btn op" onclick="calcBackspace()">⌫</button>
+      <button class="calc-btn op" onclick="calcInput('%')">%</button>
+      <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+      <button class="calc-btn" onclick="calcInput('7')">7</button>
+      <button class="calc-btn" onclick="calcInput('8')">8</button>
+      <button class="calc-btn" onclick="calcInput('9')">9</button>
+      <button class="calc-btn op" onclick="calcInput('*')">×</button>
+      <button class="calc-btn" onclick="calcInput('4')">4</button>
+      <button class="calc-btn" onclick="calcInput('5')">5</button>
+      <button class="calc-btn" onclick="calcInput('6')">6</button>
+      <button class="calc-btn op" onclick="calcInput('-')">−</button>
+      <button class="calc-btn" onclick="calcInput('1')">1</button>
+      <button class="calc-btn" onclick="calcInput('2')">2</button>
+      <button class="calc-btn" onclick="calcInput('3')">3</button>
+      <button class="calc-btn op" onclick="calcInput('+')">+</button>
+      <button class="calc-btn wide" onclick="calcInput('0')">0</button>
+      <button class="calc-btn" onclick="calcInput('.')">.</button>
+      <button class="calc-btn eq" onclick="calcEquals()">=</button>
+    </div>
+  `);
+  window.__calcExpr = '';
+}
+function calcRefresh(){ document.getElementById('calcDisplay').textContent = window.__calcExpr === '' ? '0' : window.__calcExpr.replace(/\*/g,'×').replace(/\//g,'÷'); }
+function calcInput(v){ window.__calcExpr += v; calcRefresh(); }
+function calcClear(){ window.__calcExpr = ''; calcRefresh(); }
+function calcBackspace(){ window.__calcExpr = window.__calcExpr.slice(0,-1); calcRefresh(); }
+function calcEquals(){
+  try{
+    if(!/^[0-9+\-*/.%()\s]+$/.test(window.__calcExpr)) throw new Error('invalid');
+    const result = Function('"use strict"; return (' + window.__calcExpr.replace(/%/g,'/100') + ')')();
+    window.__calcExpr = String(Math.round(result * 1e8) / 1e8);
+  }catch(e){ window.__calcExpr = 'Error'; }
+  calcRefresh();
+}
+
+/* ================= Porcentajes ================= */
+function openPercent(){
+  openModal(t('modal_percent'), `
+    <div class="field-block">
+      <span class="field-label">${t('percent_of_label')}</span>
+      <div class="field-row">
+        <div><input class="field-input" type="number" id="pOfX" placeholder="${t('percent_of_x')}"></div>
+        <div><input class="field-input" type="number" id="pOfY" placeholder="${t('percent_of_y')}"></div>
+      </div>
+      <button class="btn-secondary" onclick="calcPercentOf()">${t('calculate')}</button>
+      <div class="result-box" id="pOfResult" style="display:none;"></div>
+    </div>
+    <div class="field-block">
+      <span class="field-label">${t('percent_isof_label')}</span>
+      <div class="field-row">
+        <div><input class="field-input" type="number" id="pIsX" placeholder="${t('percent_isof_x')}"></div>
+        <div><input class="field-input" type="number" id="pIsY" placeholder="${t('percent_isof_y')}"></div>
+      </div>
+      <button class="btn-secondary" onclick="calcPercentIs()">${t('calculate')}</button>
+      <div class="result-box" id="pIsResult" style="display:none;"></div>
+    </div>
+    <div class="field-block">
+      <span class="field-label">${t('percent_change_label')}</span>
+      <div class="field-row">
+        <div><input class="field-input" type="number" id="pChX" placeholder="${t('percent_change_x')}"></div>
+        <div><input class="field-input" type="number" id="pChY" placeholder="${t('percent_change_y')}"></div>
+      </div>
+      <button class="btn-secondary" onclick="calcPercentChange()">${t('calculate')}</button>
+      <div class="result-box" id="pChResult" style="display:none;"></div>
+    </div>
+  `);
+}
+function calcPercentOf(){
+  const x = parseFloat(document.getElementById('pOfX').value), y = parseFloat(document.getElementById('pOfY').value);
+  const box = document.getElementById('pOfResult'); box.style.display='block';
+  if(isNaN(x) || isNaN(y)){ box.textContent = '—'; return; }
+  box.textContent = `${x}% ${t('percent_of_result')} ${y} = ${(x/100*y).toLocaleString(undefined,{maximumFractionDigits:4})}`;
+}
+function calcPercentIs(){
+  const x = parseFloat(document.getElementById('pIsX').value), y = parseFloat(document.getElementById('pIsY').value);
+  const box = document.getElementById('pIsResult'); box.style.display='block';
+  if(isNaN(x) || isNaN(y) || y === 0){ box.textContent = '—'; return; }
+  box.textContent = `${x} ${t('percent_isof_result')} ${(x/y*100).toLocaleString(undefined,{maximumFractionDigits:4})}% ${currentLang==='es'?'de':'of'} ${y}`;
+}
+function calcPercentChange(){
+  const x = parseFloat(document.getElementById('pChX').value), y = parseFloat(document.getElementById('pChY').value);
+  const box = document.getElementById('pChResult'); box.style.display='block';
+  if(isNaN(x) || isNaN(y)){ box.textContent = '—'; return; }
+  const result = y * (1 + x/100);
+  box.textContent = `${y} ${x>=0 ? '+' : ''}${x}% = ${result.toLocaleString(undefined,{maximumFractionDigits:4})}`;
+}
+
+/* ================= QR ================= */
+function openQR(){
+  openModal(t('modal_qr'), `
+    <input class="field-input" id="qrText" placeholder="${t('qr_input_ph')}" style="margin-bottom:12px;">
+    <button class="btn-modal" onclick="generateQR()">${t('qr_generate')}</button>
+    <div class="qr-render" id="qrRender"></div>
+    <button class="btn-secondary" id="qrDownloadBtn" style="display:none;" onclick="downloadQR()">${t('qr_download')}</button>
+  `);
+}
+function generateQR(){
+  const text = document.getElementById('qrText').value.trim();
+  const container = document.getElementById('qrRender');
+  container.innerHTML = '';
+  if(!text) return;
+  if(typeof QRCode === 'undefined'){
+    container.innerHTML = `<div class="placeholder-note">${currentLang==='es' ? 'No se pudo cargar el generador de QR.' : 'Could not load the QR generator.'}</div>`;
+    return;
+  }
+  new QRCode(container, { text: text, width: 176, height: 176, colorDark:"#17151F", colorLight:"#ffffff" });
+  document.getElementById('qrDownloadBtn').style.display = 'block';
+}
+function downloadQR(){
+  const img = document.querySelector('#qrRender img') || document.querySelector('#qrRender canvas');
+  if(!img) return;
+  const link = document.createElement('a');
+  link.download = 'nigh-qr.png';
+  link.href = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+  link.click();
+}
+
+/* ================= Contador de texto ================= */
+function openTextCounter(){
+  openModal(t('modal_textcount'), `
+    <textarea class="field-textarea" id="countText" placeholder="${t('count_ph')}" style="min-height:140px;" oninput="updateCounts()"></textarea>
+    <div class="result-box" id="countResult" style="display:flex; justify-content:space-between; gap:10px; text-align:center;">
+      <div><div style="font-family:var(--font-display); font-weight:700; font-size:20px;" id="cChars">0</div><div style="font-size:11px;color:var(--text-2);">${t('count_chars')}</div></div>
+      <div><div style="font-family:var(--font-display); font-weight:700; font-size:20px;" id="cWords">0</div><div style="font-size:11px;color:var(--text-2);">${t('count_words')}</div></div>
+      <div><div style="font-family:var(--font-display); font-weight:700; font-size:20px;" id="cSentences">0</div><div style="font-size:11px;color:var(--text-2);">${t('count_sentences')}</div></div>
+      <div><div style="font-family:var(--font-display); font-weight:700; font-size:20px;" id="cReading">0 min</div><div style="font-size:11px;color:var(--text-2);">${t('count_reading')}</div></div>
+    </div>
+  `);
+}
+function updateCounts(){
+  const text = document.getElementById('countText').value;
+  const chars = text.length;
+  const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  const sentences = text.trim() === '' ? 0 : (text.match(/[.!?]+/g) || []).length;
+  const reading = Math.max(1, Math.ceil(words / 200));
+  document.getElementById('cChars').textContent = chars;
+  document.getElementById('cWords').textContent = words;
+  document.getElementById('cSentences').textContent = sentences;
+  document.getElementById('cReading').textContent = words === 0 ? '0 min' : `~${reading} min`;
+}
+
+/* ================= Generador de contraseñas ================= */
+function openPasswordGen(){
+  openModal(t('modal_pass'), `
+    <div class="slider-row">
+      <span class="field-label" style="margin:0; white-space:nowrap;">${t('pass_length')}</span>
+      <input type="range" id="passLen" min="6" max="32" value="16" oninput="document.getElementById('passLenVal').textContent=this.value">
+      <span class="slider-val" id="passLenVal">16</span>
+    </div>
+    <div class="check-row">
+      <label class="check-chip"><input type="checkbox" id="passUpper" checked> ${t('pass_upper')}</label>
+      <label class="check-chip"><input type="checkbox" id="passLower" checked> ${t('pass_lower')}</label>
+      <label class="check-chip"><input type="checkbox" id="passNumbers" checked> ${t('pass_numbers')}</label>
+      <label class="check-chip"><input type="checkbox" id="passSymbols"> ${t('pass_symbols')}</label>
+    </div>
+    <button class="btn-modal" onclick="generatePassword()">${t('pass_generate')}</button>
+    <div class="pass-output" style="margin-top:14px;">
+      <input class="field-input" id="passOutput" readonly placeholder="—">
+      <button class="copy-btn" onclick="copyPassword()">⧉</button>
+    </div>
+    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+    <div style="font-size:11.5px; color:var(--text-2); margin-top:6px;" id="strengthLabel"></div>
+  `);
+}
+function generatePassword(){
+  const len = parseInt(document.getElementById('passLen').value, 10);
+  const useUpper = document.getElementById('passUpper').checked;
+  const useLower = document.getElementById('passLower').checked;
+  const useNumbers = document.getElementById('passNumbers').checked;
+  const useSymbols = document.getElementById('passSymbols').checked;
+  let charset = '';
+  if(useUpper) charset += 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  if(useLower) charset += 'abcdefghijkmnpqrstuvwxyz';
+  if(useNumbers) charset += '23456789';
+  if(useSymbols) charset += '!@#$%^&*_-+=?';
+  if(!charset){ charset = 'abcdefghijkmnpqrstuvwxyz23456789'; }
+  let pass = '';
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for(let i=0;i<len;i++){ pass += charset[arr[i] % charset.length]; }
+  document.getElementById('passOutput').value = pass;
+  const score = (useUpper?1:0)+(useLower?1:0)+(useNumbers?1:0)+(useSymbols?1:0) + (len>=14?1:0) + (len>=20?1:0);
+  const fill = document.getElementById('strengthFill'), label = document.getElementById('strengthLabel');
+  if(score <= 2){ fill.style.width='30%'; fill.style.background='var(--red)'; label.textContent = t('pass_weak'); }
+  else if(score <= 4){ fill.style.width='65%'; fill.style.background='var(--amber)'; label.textContent = t('pass_medium'); }
+  else { fill.style.width='100%'; fill.style.background='var(--green)'; label.textContent = t('pass_strong'); }
+}
+function copyPassword(){
+  const val = document.getElementById('passOutput').value;
+  if(!val) return;
+  navigator.clipboard.writeText(val).then(()=>{
+    const label = document.getElementById('strengthLabel');
+    const original = label.textContent;
+    label.textContent = t('pass_copied');
+    setTimeout(()=>{ label.textContent = original; }, 1200);
+  });
+}
+
+/* ================= Diferencia de fechas ================= */
+function openDateDiff(){
+  openModal(t('modal_date'), `
+    <div class="field-row">
+      <div><span class="field-label">${t('date_from')}</span><input class="field-input" type="date" id="dateFrom"></div>
+      <div><span class="field-label">${t('date_to')}</span><input class="field-input" type="date" id="dateTo"></div>
+    </div>
+    <button class="btn-modal" onclick="calcDateDiff()">${t('date_calc')}</button>
+    <div class="result-box" id="dateResult" style="display:none; text-align:center;"></div>
+  `);
+}
+function calcDateDiff(){
+  const from = document.getElementById('dateFrom').value, to = document.getElementById('dateTo').value;
+  const box = document.getElementById('dateResult'); box.style.display='block';
+  if(!from || !to){ box.textContent = '—'; return; }
+  const d1 = new Date(from), d2 = new Date(to);
+  const diffDays = Math.round(Math.abs(d2 - d1) / 86400000);
+  const years = Math.floor(diffDays/365), months = Math.floor((diffDays%365)/30), days = diffDays - years*365 - months*30;
+  box.innerHTML = `<div style="font-family:var(--font-display); font-weight:800; font-size:30px; color:var(--violet-300);">${diffDays.toLocaleString()}</div>
+    <div style="font-size:12.5px; color:var(--text-2); margin-top:4px;">${t('date_result_days')}</div>
+    <div style="font-size:11.5px; color:var(--text-3); margin-top:8px;">${t('date_result_detail')} ${years}${currentLang==='es'?'a':'y'} ${months}${currentLang==='es'?'m':'mo'} ${days}${currentLang==='es'?'d':'d'}</div>`;
+}
+
+/* ================= Resolver (AI) ================= */
+const RESOLVER_META = {
+  identificar: { titleKey:'resolver1_title', phKey:'resolver1_placeholder',
+    sys: (lang)=> `Eres NIGH, un asistente práctico que ayuda a identificar objetos cotidianos a partir de una descripción. Responde en ${lang}, en un tono directo y útil, máximo 6 frases: di qué crees que es probablemente el objeto, para qué sirve y, si es útil, una recomendación breve. Si la descripción es insuficiente, pide amablemente 1-2 detalles concretos que ayudarían. No uses markdown.` },
+  arreglo: { titleKey:'resolver2_title', phKey:'resolver2_placeholder',
+    sys: (lang)=> `Eres NIGH, un asistente de diagnóstico para problemas domésticos y de electrónica cotidiana. Responde en ${lang}, en pasos breves y numerados (máximo 5), con las causas más probables y qué probar primero, de lo más simple a lo más avanzado. Si algo implica riesgo eléctrico, de gas o similar, recomienda con claridad acudir a un profesional. No uses markdown, usa saltos de línea simples y números.` },
+  valor: { titleKey:'resolver3_title', phKey:'resolver3_placeholder',
+    sys: (lang)=> `Eres NIGH, un asistente que da una orientación aproximada de valor de mercado de objetos de segunda mano a partir de su descripción. Responde en ${lang}, máximo 5 frases: da un rango de precio orientativo razonable, aclara que es una estimación general (no una tasación) y qué factores podrían subir o bajar ese valor. No uses markdown.` },
+  tirar: { titleKey:'resolver4_title', phKey:'resolver4_placeholder',
+    sys: (lang)=> `Eres NIGH, un asistente que explica cómo desechar o reciclar correctamente un residuo doméstico según su tipo. Responde en ${lang}, máximo 5 frases: indica el contenedor o punto de recogida adecuado (general: orgánico, envases, vidrio, papel, punto limpio, contenedor de pilas/electrónica, etc.) y una advertencia si el residuo es peligroso. No uses markdown.` }
+};
+function openResolver(type){
+  const meta = RESOLVER_META[type];
+  openModal(t(meta.titleKey), `
+    <textarea class="field-textarea" id="resolverInput" placeholder="${t(meta.phKey)}"></textarea>
+    <button class="btn-modal" id="resolverBtn" onclick="askResolver('${type}')">${t('resolver_ask')}</button>
+    <div class="result-box" id="resolverResult" style="display:none;"></div>
+  `);
+}
+async function askResolver(type){
+  const meta = RESOLVER_META[type];
+  const input = document.getElementById('resolverInput').value.trim();
+  const box = document.getElementById('resolverResult');
+  const btn = document.getElementById('resolverBtn');
+  box.style.display = 'block';
+  if(!input){ box.textContent = t('study_need_notes'); return; }
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${t('resolver_thinking')}`;
+  box.innerHTML = `<span class="spinner dark"></span> ${t('resolver_thinking')}`;
+  const langName = currentLang === 'es' ? 'español' : 'inglés (English)';
+  const answer = await askNIGH(meta.sys(langName), input);
+  box.textContent = answer || (currentLang==='es' ? 'No se pudo contactar con NIGH ahora mismo. Inténtalo de nuevo.' : 'Could not reach NIGH right now. Please try again.');
+  btn.disabled = false; btn.textContent = t('resolver_ask');
+}
+
+/* ================= Estudiar (AI quiz) ================= */
+async function createReview(){
+  const notes = document.getElementById('studyNotes').value.trim();
+  const preview = document.getElementById('studyPreview');
+  const btn = document.getElementById('studyBtn');
+  if(!notes){
+    preview.innerHTML = `<div class="placeholder-note">${t('study_need_notes')}</div>`;
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> ${t('study_creating')}`;
+  preview.innerHTML = `<div class="placeholder-note"><span class="spinner dark"></span> ${t('study_creating')}</div>`;
+  const langName = currentLang === 'es' ? 'español' : 'English';
+  const sys = `Eres NIGH, un generador de repasos de estudio. A partir de unos apuntes, genera EXACTAMENTE 5 preguntas de repaso con su respuesta breve, en ${langName}. Responde ÚNICAMENTE con un JSON válido, sin texto adicional, sin backticks, con este formato exacto: [{"q":"pregunta","a":"respuesta breve"}, ...]`;
+  const raw = await askNIGH(sys, notes);
+  const quiz = cleanJSON(raw);
+  btn.disabled = false;
+  btn.innerHTML = `✦ <span>${t('study_button')}</span>`;
+  if(!quiz || !Array.isArray(quiz) || quiz.length === 0){
+    preview.innerHTML = `<div class="placeholder-note">${currentLang==='es' ? 'No se pudo generar el repaso. Inténtalo de nuevo.' : 'Could not generate the review. Please try again.'}</div>`;
+    return;
+  }
+  preview.innerHTML = quiz.map((item, i) => `
+    <div class="quiz-card" onclick="this.classList.toggle('revealed')">
+      <span class="qlabel">${currentLang==='es'?'PREGUNTA':'QUESTION'} ${i+1}</span>
+      ${item.q}
+      <div class="quiz-a">${item.a}</div>
+      <div class="quiz-hint">${t('quiz_tap_hint')}</div>
+    </div>
+  `).join('');
+}
+
+/* ================= Seguridad (AI shield) ================= */
+async function analyzeShield(){
+  const text = document.getElementById('shieldInput').value.trim();
+  const resultBox = document.getElementById('shieldResult');
+  const btn = document.getElementById('shieldBtn');
+  if(!text){ resultBox.innerHTML = `<div class="shield-signals">${t('shield_need_text')}</div>`; return; }
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner dark"></span> ${t('shield_analyzing')}`;
+  resultBox.innerHTML = '';
+  const langName = currentLang === 'es' ? 'español' : 'English';
+  const sys = `Eres NIGH Shield, un analizador de señales básicas de riesgo (phishing, estafas, fraude) en mensajes, anuncios o URLs. Analiza el texto del usuario y responde ÚNICAMENTE con JSON válido, sin backticks, con este formato exacto: {"level":"bajo|medio|alto","message":"una frase breve resumen","signals":["señal 1","señal 2"]}. El campo "message" y "signals" deben estar en ${langName}. Nunca afirmes con un 100% de certeza que algo es una estafa; usa un tono de orientación, no de veredicto.`;
+  const raw = await askNIGH(sys, text);
+  const result = cleanJSON(raw);
+  btn.disabled = false;
+  btn.textContent = t('shield_button');
+  if(!result){
+    resultBox.innerHTML = `<div class="shield-signals">${currentLang==='es' ? 'No se pudo analizar el texto ahora mismo. Inténtalo de nuevo.' : 'Could not analyze the text right now. Please try again.'}</div>`;
+    return;
+  }
+  const level = ['bajo','medio','alto'].includes(result.level) ? result.level : 'medio';
+  const emoji = level === 'bajo' ? '🟢' : level === 'alto' ? '🔴' : '🟡';
+  resultBox.innerHTML = `
+    <div class="badge-level badge-${level}">${emoji} ${t('shield_level_'+level)}</div>
+    <div class="shield-signals" style="margin-bottom:8px;">${result.message || ''}</div>
+    ${Array.isArray(result.signals) && result.signals.length ? `<div class="shield-signals">${result.signals.map(s=>'• '+s).join('<br>')}</div>` : ''}
+  `;
+}
+
+/* ================= Idea box ================= */
+function openIdeaBox(){
+  openModal(t('idea_title'), `
+    <textarea class="field-textarea" id="ideaInput" placeholder="${t('idea_placeholder')}"></textarea>
+    <button class="btn-modal" onclick="sendIdea()">${t('idea_send')}</button>
+    <div class="result-box" id="ideaResult" style="display:none;"></div>
+  `);
+}
+function sendIdea(){
+  const val = document.getElementById('ideaInput').value.trim();
+  const box = document.getElementById('ideaResult');
+  box.style.display = 'block';
+  if(!val) return;
+  const ideas = JSON.parse(localStorage.getItem('nigh_ideas') || '[]');
+  ideas.push({ text: val, date: new Date().toISOString() });
+  try{ localStorage.setItem('nigh_ideas', JSON.stringify(ideas)); }catch(e){}
+  box.textContent = t('idea_sent');
+  document.getElementById('ideaInput').value = '';
+}
+
+/* ================= Init ================= */
+applyLang();
+</script>
+
+</body>
+</html>
