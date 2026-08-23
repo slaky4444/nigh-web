@@ -75,7 +75,7 @@ export default async function handler(req, res) {
         ? data.candidates[0].content.parts[0].text
         : "";
 
-    return res.status(200).json({ text: text || "", debug: text ? undefined : data });
+    return res.status(200).json({ text: text || "", errorCode: text ? undefined : (data && data.error && data.error.code) });
   } catch (err) {
     return res.status(500).json({ error: "Error al llamar a Gemini", detail: String(err) });
   }
