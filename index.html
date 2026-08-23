@@ -620,6 +620,7 @@ async function askNIGH(systemPrompt, userPrompt){
     const data = await res.json();
     if(data && data.text) return data.text.trim();
     if(data && data.errorCode === 429) return "⏳ NIGH ha recibido muchas preguntas y ha agotado su cupo gratis por hoy. Prueba otra vez en unos minutos, o mañana si sigue igual.";
+    if(data && data.errorCode === 404) return "⚠️ El modelo de IA configurado ya no existe (Google lo habrá cambiado de nombre otra vez). Hay que actualizar el nombre del modelo en api/nigh.js.";
     return null;
   }catch(err){
     console.error("NIGH AI error:", err);
