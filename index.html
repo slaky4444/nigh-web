@@ -608,19 +608,36 @@ document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal();
 const NIGH_API_ENDPOINT = "/api/nigh";
 
 async function askNIGH(systemPrompt, userPrompt){
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28000); // no dejar la rueda girando más de 28s
   try{
     const res = await fetch(NIGH_API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: systemPrompt, message: userPrompt })
+      body: JSON.stringify({ system: systemPrompt, message: userPrompt }),
+      signal: controller.signal
     });
     const data = await res.json();
-    return (data && data.text) ? data.text.trim() : null;
+    if(data && data.text) return data.text.trim();
+    if(data && data.debug) return "⚠️ DEBUG:\n" + JSON.stringify(data.debug, null, 2);
+    if(data && data.error) return "⚠️ DEBUG (error servidor):\n" + JSON.stringify(data, null, 2);
+    return null;
   }catch(err){
     console.error("NIGH AI error:", err);
     return null;
+  }finally{
+    clearTimeout(timeout);
   }
 }
+
+/* ================= Personalidad y seguridad base de NIGH ================= */
+const NIGH_PERSONA = `Tono de NIGH: cercano, natural y con un puntito desenfadado — como si hablara alguien joven que sabe de tecnología y va al grano, nunca robótico ni acartonado, pero sin forzar jerga, emojis ni intentar sonar "cool" de forma artificial. Adapta el registro a como te hable la persona: si escribe formal, responde algo más formal; si escribe informal y relajado, tú también puedes relajarte un poco. Varía el tono, no respondas siempre igual.
+Límites de seguridad: no ayudes a crear contenido peligroso, ilegal, que facilite dañar a alguien o a uno mismo, contenido sexual explícito, ni nada relacionado con menores de forma inapropiada. Si te piden algo así, decláinalo en una frase breve y amable, sin sermonear, y si parte de la pregunta sí se puede responder, ayuda con esa parte.`;
+
+function withPersona(systemPrompt){
+  return NIGH_PERSONA + "\n\n" + systemPrompt;
+}
+
 function cleanJSON(text){
   if(!text) return null;
   let t = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
@@ -673,7 +690,7 @@ async function openGeneralAssistant(q){
   panel.classList.add('show');
   panel.innerHTML = `<span class="spinner dark"></span> ${t('resolver_thinking')}`;
   const sys = `Eres el asistente de NIGH, una plataforma web que reúne herramientas prácticas para problemas cotidianos (lema: "Internet, pero útil"). Responde de forma breve, clara y directa (máximo 5-6 frases) a la consulta del usuario, en ${currentLang === 'es' ? 'español' : 'inglés'}. Si la consulta encaja con una utilidad concreta (calculadora, porcentajes, código QR, contraseñas, contar texto, fechas) o con identificar un objeto, valorar un objeto, arreglar algo o reciclar algo, menciónalo brevemente al final como sugerencia. No uses markdown.`;
-  const answer = await askNIGH(sys, q);
+  const answer = await askNIGH(withPersona(sys), q);
   panel.innerHTML = answer ? answer : (currentLang === 'es' ? 'No se pudo contactar con NIGH ahora mismo. Inténtalo de nuevo en unos segundos.' : "Couldn't reach NIGH right now. Please try again in a moment.");
 }
 
@@ -933,7 +950,7 @@ async function askResolver(type){
   btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${t('resolver_thinking')}`;
   box.innerHTML = `<span class="spinner dark"></span> ${t('resolver_thinking')}`;
   const langName = currentLang === 'es' ? 'español' : 'inglés (English)';
-  const answer = await askNIGH(meta.sys(langName), input);
+  const answer = await askNIGH(withPersona(meta.sys(langName)), input);
   box.textContent = answer || (currentLang==='es' ? 'No se pudo contactar con NIGH ahora mismo. Inténtalo de nuevo.' : 'Could not reach NIGH right now. Please try again.');
   btn.disabled = false; btn.textContent = t('resolver_ask');
 }
