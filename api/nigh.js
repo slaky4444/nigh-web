@@ -28,6 +28,10 @@
  * Vercel actualiza la web sola. No hay que tocar más nada.
  */
 
+export const config = {
+  maxDuration: 30, // le damos hasta 30s en vez de los 10s por defecto, para que no se corte
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -55,7 +59,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: userMessage }] }],
           ...(systemPrompt ? { systemInstruction: { parts: [{ text: systemPrompt }] } } : {}),
-          generationConfig: { maxOutputTokens: 700 },
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
         }),
       }
     );
@@ -71,7 +75,7 @@ export default async function handler(req, res) {
         ? data.candidates[0].content.parts[0].text
         : "";
 
-    return res.status(200).json({ text: text || "" });
+    return res.status(200).json({ text: text || "", debug: text ? undefined : data });
   } catch (err) {
     return res.status(500).json({ error: "Error al llamar a Gemini", detail: String(err) });
   }
